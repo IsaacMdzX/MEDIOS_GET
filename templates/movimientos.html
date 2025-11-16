@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimientos{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">Historial de Movimientos</h3>
+
+<div class="card mb-3">
+    <div class="card-body">
+<form class="row gy-2 gx-2 align-items-end" method="get">
+    <div class="col-12 col-md-2">
+        <label class="form-label">Tipo</label>
+        <select class="form-select" name="tipo">
+            <option value="" {{ 'selected' if not filtros.tipo else '' }}>Todos</option>
+            <option value="ingreso" {{ 'selected' if filtros.tipo=='ingreso' else '' }}>Ingreso</option>
+            <option value="gasto" {{ 'selected' if filtros.tipo=='gasto' else '' }}>Gasto</option>
+        </select>
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label">Desde</label>
+        <input class="form-control" type="date" name="desde" value="{{ filtros.desde }}" />
+    </div>
+    <div class="col-6 col-md-2">
+        <label class="form-label">Hasta</label>
+        <input class="form-control" type="date" name="hasta" value="{{ filtros.hasta }}" />
+    </div>
+    <div class="col-12 col-md-4">
+        <label class="form-label">Concepto</label>
+        <input class="form-control" type="text" name="concepto" placeholder="Buscar..." value="{{ filtros.concepto }}" />
+    </div>
+    <div class="col-12 col-md-2 d-flex gap-2">
+        <button class="btn btn-primary w-100" type="submit"><i class="bi bi-funnel me-1"></i> Filtrar</button>
+        <a class="btn btn-outline-secondary d-none d-md-inline-block" href="/movimientos">Limpiar</a>
+    </div>
+    <div class="col-12 d-md-none">
+        <a class="btn btn-outline-secondary w-100" href="/movimientos">Limpiar</a>
+    </div>
+        </form>
+    </div>
+</div>
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+    <thead>
+        <tr>
+            <th>Tipo</th>
+            <th>Concepto</th>
+            <th class="text-end">Monto</th>
+            <th>Fecha</th>
+            <th class="text-center">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+            {% for m in movs %}
+        <tr>
+            <td>
+                {% if m['tipo']=='ingreso' %}<span class="badge bg-success">Ingreso</span>
+                {% else %}<span class="badge bg-danger">Gasto</span>{% endif %}
+            </td>
+            <td>{{ m['concepto'] }}</td>
+            <td class="text-end">${{ '%.2f'|format(m['monto'] or 0) }}</td>
+            <td>{{ m['fecha'] }}</td>
+            <td class="text-center">
+                        <a class="btn btn-sm btn-outline-primary me-1" href="/movimientos/{{ m['id'] }}/editar">
+                            <i class="bi bi-pencil"></i>
+                            <span class="visually-hidden">Editar</span>
+                        </a>
+                <form method="post" action="/movimientos/{{ m['id'] }}/eliminar" onsubmit="return confirm('¿Eliminar este registro?');" class="d-inline">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">
+                        <i class="bi bi-trash"></i>
+                        <span class="visually-hidden">Eliminar</span>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">No hay movimientos aún.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<a href="/" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Regresar</a>
+{% endblock %}

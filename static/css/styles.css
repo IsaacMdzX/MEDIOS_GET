@@ -1,0 +1,162 @@
+body {
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    background: #f4f6f8;
+    margin: 0;
+}
+
+/* Cards: suavizar y dejar que el grid de Bootstrap gestione el ancho */
+.card {
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+.card .card-body {
+    padding: 1.25rem 1.25rem;
+}
+
+/* Formularios específicos de páginas de alta */
+.form-card {
+    max-width: 560px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* Tablas: ya usamos .table de Bootstrap; ajustes sutiles */
+table.table th, table.table td {
+    vertical-align: middle;
+}
+table.table thead th {
+    background: #f8f9fa;
+}
+
+/* Helpers antiguos por compatibilidad (si se usan fuera de Bootstrap) */
+.botones { text-align: center; }
+.btn.rojo { background: #e63946; }
+.btn.gris { background: #6c757d; }
+
+/* --- Modern theme overrides --- */
+:root{
+    /* Vibrant, modern palette */
+    --brand-600:#7c3aed; /* violet */
+    --brand-700:#6d28d9;
+    --accent-500:#06b6d4; /* cyan */
+    --success-600:#16a34a;
+    --danger-600:#e11d48;
+    --gray-50:#f8fafc;
+    --gray-100:#f3f4f6;
+    --gray-200:#e5e7eb;
+}
+
+body {
+    background: radial-gradient(1000px 600px at 10% -20%, #eef2ff 0%, transparent 60%),
+                            radial-gradient(800px 500px at 100% 0%, #ecfeff 0%, transparent 60%),
+                            #f6f7fb;
+}
+
+/* Navbar interactive + glass effect */
+.navbar-glass{
+    background: rgba(255,255,255,.75) !important;
+    backdrop-filter: saturate(140%) blur(8px);
+    -webkit-backdrop-filter: saturate(140%) blur(8px);
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    z-index: 1030;
+}
+.navbar .navbar-brand.brand-gradient{
+    background: linear-gradient(90deg, var(--brand-600), var(--accent-500));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.navbar .navbar-brand .brand-logo{ height: 36px; width: auto; display: block; }
+@media (min-width: 992px){ /* lg and up */
+    .navbar .navbar-brand .brand-logo{ height: 44px; }
+}
+.navbar .nav-link{
+    position: relative;
+    border-radius: 10px;
+    padding: .5rem .65rem;
+    transition: background-color .2s ease, color .2s ease, transform .08s ease;
+}
+.navbar .container{ gap: .5rem; }
+.navbar-nav{ align-items: center; }
+.navbar .navbar-brand{ letter-spacing: .2px; }
+.navbar .nav-link::after{
+    content: '';
+    position: absolute; left: .75rem; right: .75rem; bottom: .35rem;
+    height: 2px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--brand-600), var(--accent-500));
+    transform: scaleX(0); transform-origin: left; transition: transform .2s ease;
+}
+.navbar .nav-link:hover::after{ transform: scaleX(1); }
+.navbar .nav-link.active{
+    color: #0f172a !important;
+    background: rgba(124,58,237,.08);
+}
+.navbar .nav-link.active::after{ transform: scaleX(1); }
+
+/* CTA button in navbar */
+.btn-cta{
+    border-radius: 999px;
+    padding: .475rem .9rem;
+    box-shadow: 0 6px 16px rgba(124,58,237,.22);
+}
+.btn-cta:hover{
+    box-shadow: 0 10px 22px rgba(124,58,237,.28);
+}
+
+/* Botones modernos */
+.btn:not(.btn-link){
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform .08s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.btn:not(.btn-link):hover{
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+.btn:active{ transform: translateY(0); }
+
+.btn-primary{
+    background-image: linear-gradient(90deg, var(--brand-600), var(--accent-500));
+    background-color: var(--brand-600);
+    border-color: transparent;
+}
+.btn-primary:hover{
+    filter: brightness(.98);
+}
+
+.btn-danger{ background-color: var(--danger-600); border-color: var(--danger-600); }
+.btn-danger:hover{ filter: brightness(0.95); }
+
+.btn-outline-secondary{ border-color: var(--gray-200); color:#344054; }
+.btn-outline-secondary:hover{ background:#f8fafc; border-color:#cbd5e1; color:#111827; }
+
+/* Tablas: hover sutil */
+table.table tbody tr:hover{ background: #fafafa; }
+
+/* Inputs más agradables */
+.form-control, .form-select{ border-radius: 10px; }
+.form-control:focus, .form-select:focus{
+    box-shadow: 0 0 0 .2rem rgba(79, 70, 229, .15);
+    border-color: var(--brand-600);
+}
+
+.badge{ border-radius: 999px; }
+
+/* Enhancements: animations & input groups */
+@keyframes fadeUp { 0% { opacity:0; transform: translateY(8px);} 100% { opacity:1; transform:none; } }
+main.container > * { animation: fadeUp .28s ease both; }
+
+/* Card hover lift */
+.card { transition: transform .15s ease, box-shadow .28s ease; }
+.card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.10); }
+
+/* Input groups polished */
+.input-group-text{ background:#fff; border-color: var(--gray-200); border-radius: 10px 0 0 10px; }
+.input-group .form-control{ border-left:0; }
+.input-group:focus-within .input-group-text{ border-color: var(--brand-600); }
+
+/* Soft badges for ingresos/gastos */
+.badge.bg-success{ background: rgba(22,163,74,.12) !important; color: #15803d; }
+.badge.bg-danger{ background: rgba(225,29,72,.12) !important; color: #be123c; }
+
+
+/* removed duplicated theme block */

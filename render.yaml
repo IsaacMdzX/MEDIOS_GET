@@ -1,0 +1,21 @@
+databases:
+  - name: medios-get-db
+    databaseName: medios_get
+    user: medios_get
+
+services:
+  - type: web
+    name: medios-get
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --threads 2 --timeout 120 --bind 0.0.0.0:$PORT
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: medios-get-db
+          property: connectionString
+      - key: FLASK_DEBUG
+        value: "0"

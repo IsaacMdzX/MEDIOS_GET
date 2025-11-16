@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Movimiento{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 col-lg-6 mx-auto">
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Editar Movimiento</h4>
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="tipo" required>
+              <option value="ingreso" {{ 'selected' if mov.tipo == 'ingreso' else '' }}>Ingreso</option>
+              <option value="gasto" {{ 'selected' if mov.tipo == 'gasto' else '' }}>Gasto</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Concepto</label>
+            <input class="form-control" type="text" name="concepto" value="{{ mov.concepto }}" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Monto</label>
+            <input class="form-control" type="number" step="0.01" name="monto" value="{{ mov.monto }}" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Fecha</label>
+            <input class="form-control" type="date" name="fecha" value="{{ mov.fecha }}" required />
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-save me-1"></i> Guardar cambios
+            </button>
+            <a class="btn btn-outline-secondary" href="/movimientos">
+              <i class="bi bi-arrow-left me-1"></i> Cancelar
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

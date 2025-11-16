@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 px-md-3">
+    <!-- Métricas principales -->
+    <div class="row g-3 mb-1">
+        <div class="col-12 col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted">Saldo total</div>
+                    <div class="display-6 fw-semibold mb-0">${{ '%.2f'|format(saldo or 0) }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted">Ingresos</div>
+                    <div class="fs-3 text-success mb-0">${{ '%.2f'|format(ingresos or 0) }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted">Gastos</div>
+                    <div class="fs-3 text-danger mb-0">${{ '%.2f'|format(gastos or 0) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Acciones rápidas -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="mb-3">Acciones</h5>
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" href="/nuevo_ingreso"><i class="bi bi-plus-circle me-1"></i> Registrar Ingreso</a>
+                        <a class="btn btn-danger" href="/nuevo_gasto"><i class="bi bi-dash-circle me-1"></i> Registrar Gasto</a>
+                        <a class="btn btn-outline-secondary" href="/movimientos"><i class="bi bi-list me-1"></i> Ver Movimientos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recientes -->
+        <div class="col-12 col-lg-8">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="text-muted mb-3">Recientes</h5>
+                    <div class="list-group list-group-flush">
+                        {% for m in recientes %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if m['tipo']=='ingreso' %}
+                                    <span class="badge bg-success me-2">Ingreso</span>
+                                {% else %}
+                                    <span class="badge bg-danger me-2">Gasto</span>
+                                {% endif %}
+                                <span class="fw-medium">{{ m['concepto'] }}</span>
+                                <small class="text-muted ms-2">{{ m['fecha'] }}</small>
+                            </div>
+                            <div class="fw-semibold {{ 'text-success' if m['tipo']=='ingreso' else 'text-danger' }}">
+                                ${{ '%.2f'|format(m['monto'] or 0) }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-muted">No hay movimientos recientes.</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3"><a href="/movimientos" class="btn btn-sm btn-outline-secondary">Ver todos</a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
