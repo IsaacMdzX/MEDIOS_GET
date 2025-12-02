@@ -11,6 +11,7 @@ except ImportError:
     load_dotenv = None
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 # Create Flask app early so Gunicorn can import `app`
 app = Flask(__name__)
@@ -125,28 +126,34 @@ except Exception:
 
 @app.route("/")
 def index():
-    conn = get_db()
-    cur = get_cursor(conn)
+    try:
+        conn = get_db()
+        cur = get_cursor(conn)
 
-    # Use a uniform alias and access by key
-    cur.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM movimientos WHERE tipo='ingreso'")
-    ingresos_row = cur.fetchone()
-    ingresos = (ingresos_row["total"] if isinstance(ingresos_row, dict) or hasattr(ingresos_row, 'keys') else ingresos_row[0]) or 0
+        # Use a uniform alias and access by key
+        cur.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM movimientos WHERE tipo='ingreso'")
+        ingresos_row = cur.fetchone()
+        ingresos = (ingresos_row["total"] if isinstance(ingresos_row, dict) or hasattr(ingresos_row, 'keys') else ingresos_row[0]) or 0
 
-    cur.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM movimientos WHERE tipo='gasto'")
-    gastos_row = cur.fetchone()
-    gastos = (gastos_row["total"] if isinstance(gastos_row, dict) or hasattr(gastos_row, 'keys') else gastos_row[0]) or 0
+        cur.execute("SELECT COALESCE(SUM(monto), 0) AS total FROM movimientos WHERE tipo='gasto'")
+        gastos_row = cur.fetchone()
+        gastos = (gastos_row["total"] if isinstance(gastos_row, dict) or hasattr(gastos_row, 'keys') else gastos_row[0]) or 0
 
-    saldo = ingresos - gastos
+        saldo = ingresos - gastos
 
-    # Últimos 5 movimientos
-    cur.execute("SELECT * FROM movimientos ORDER BY fecha DESC LIMIT 5")
-    recientes = cur.fetchall()
+        # Últimos 5 movimientos
+        cur.execute("SELECT * FROM movimientos ORDER BY fecha DESC LIMIT 5")
+        recientes = cur.fetchall()
 
-    cur.close()
-    conn.close()
+        cur.close()
+        conn.close()
 
-    return render_template("index.html", ingresos=ingresos, gastos=gastos, saldo=saldo, recientes=recientes)
+        return render_template("index.html", ingresos=ingresos, gastos=gastos, saldo=saldo, recientes=recientes)
+    except Exception:
+        # Log full exception to stdout (captured by Render)
+        logger.exception("Error while rendering index; DB may be unavailable")
+        # Provide a friendly error page that points to /health and logs
+        return render_template("error.html", message="No se pudo acceder a la base de datos. Revisa /health y los logs."), 500
 
 def _build_filters(args):
     conditions = []
@@ -184,23 +191,27 @@ def _build_filters(args):
 
 @app.route("/movimientos")
 def movimientos():
-    conn = get_db()
-    cur = get_cursor(conn)
+    try:
+        conn = get_db()
+        cur = get_cursor(conn)
 
-    where, params = _build_filters(request.args)
-    sql = "SELECT * FROM movimientos" + where + " ORDER BY fecha DESC"
-    cur.execute(sql, params)
-    movs = cur.fetchall()
+        where, params = _build_filters(request.args)
+        sql = "SELECT * FROM movimientos" + where + " ORDER BY fecha DESC"
+        cur.execute(sql, params)
+        movs = cur.fetchall()
 
-    cur.close()
-    conn.close()
+        cur.close()
+        conn.close()
 
-    return render_template("movimientos.html", movs=movs, filtros={
-        'tipo': request.args.get('tipo', ''),
-        'desde': request.args.get('desde', ''),
-        'hasta': request.args.get('hasta', ''),
-        'concepto': request.args.get('concepto', ''),
-    })
+        return render_template("movimientos.html", movs=movs, filtros={
+            'tipo': request.args.get('tipo', ''),
+            'desde': request.args.get('desde', ''),
+            'hasta': request.args.get('hasta', ''),
+            'concepto': request.args.get('concepto', ''),
+        })
+    except Exception:
+        logger.exception("Error while listing movimientos; DB may be unavailable")
+        return render_template("error.html", message="No se pudo acceder a la base de datos. Revisa /health y los logs."), 500
 
 @app.post("/movimientos/<int:mov_id>/eliminar")
 def eliminar_movimiento(mov_id: int):
