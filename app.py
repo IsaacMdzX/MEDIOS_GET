@@ -1,13 +1,18 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import os
 import sqlite3
 from urllib.parse import urlparse
 from pathlib import Path
+import time
+import logging
 try:
     from dotenv import load_dotenv
 except ImportError:
     load_dotenv = None
 
+logger = logging.getLogger(__name__)
+
+# Create Flask app early so Gunicorn can import `app`
 app = Flask(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,6 +25,10 @@ def _is_postgres(url: str) -> bool:
     return url.startswith("postgres://") or url.startswith("postgresql://")
 
 IS_POSTGRES = bool(DATABASE_URL and _is_postgres(DATABASE_URL))
+
+
+
+
 
 
 def get_db():
@@ -75,12 +84,44 @@ def init_db():
     cur.close()
     conn.close()
 
-# Ensure DB schema exists on import (Flask 3 removed before_first_request)
+
+def _wait_for_postgres(retries: int = 8, delay: float = 2.0):
+    """Try to connect to Postgres a few times before giving up.
+
+    This helps when DB provisioning is slightly delayed in hosted environments.
+    """
+    if not IS_POSTGRES:
+        return True
+
+    try:
+        import psycopg2
+    except Exception:
+        logger.exception("psycopg2 not available when waiting for Postgres")
+        return False
+
+    for attempt in range(1, retries + 1):
+        try:
+            conn = psycopg2.connect(DATABASE_URL)
+            conn.close()
+            logger.info("Connected to Postgres on attempt %d", attempt)
+            return True
+        except Exception as e:
+            logger.warning("Postgres not ready (attempt %d/%d): %s", attempt, retries, e)
+            time.sleep(delay)
+            delay = min(delay * 1.5, 10)
+
+    logger.error("Could not connect to Postgres after %d attempts", retries)
+    return False
+
+# Ensure DB schema exists on startup; attempt to wait for Postgres if needed
 try:
+    if IS_POSTGRES:
+        # Wait a bit for the remote Postgres service to be ready before creating the schema
+        _wait_for_postgres()
     init_db()
 except Exception:
-    # Best-effort init; errors will surface on first DB use anyway
-    pass
+    # Best-effort init; any DB errors will surface later but we avoid crashing the process
+    logger.exception("init_db() failed at import time; continuing without blocking startup")
 
 @app.route("/")
 def index():
@@ -298,10 +339,10 @@ def health():
             except Exception:
                 pass
         conn.close()
-        return info, 200
+        return jsonify(info), 200
     except Exception as e:
         engine = "postgres" if IS_POSTGRES else "sqlite"
-        return {"status": "error", "engine": engine, "detail": str(e)}, 500
+        return jsonify({"status": "error", "engine": engine, "detail": str(e)}), 500
 
 if __name__ == "__main__":
     init_db()
