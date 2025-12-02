@@ -12,6 +12,12 @@
 
 <body>
 
+  {%- if fallback_sqlite %}
+  <div class="alert alert-warning text-center mb-0" role="alert">
+    <strong>Atención:</strong> La aplicación está operando en modo <em>fallback</em> usando SQLite (la conexión a Postgres no está disponible).
+  </div>
+  {%- endif %}
+
 <!-- ========================================== -->
 <!--                NAVBAR                      -->
 <!-- ========================================== -->

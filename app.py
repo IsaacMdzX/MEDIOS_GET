@@ -400,6 +400,19 @@ def health():
         return jsonify({"status": "error", "engine": engine, "detail": str(e), "fallback_sqlite": fallback}), 500
 
 
+# Inject runtime flags into template context so templates can show status banners
+@app.context_processor
+def inject_runtime_flags():
+    try:
+        fallback = bool(FALLBACK_SQLITE)
+    except NameError:
+        fallback = False
+    return {
+        "fallback_sqlite": fallback,
+        "is_postgres": IS_POSTGRES,
+    }
+
+
 # Lightweight diagnostic endpoint that does NOT touch the database.
 # Useful to verify the WSGI process is running and env vars are available.
 @app.route("/__status")
