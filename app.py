@@ -374,6 +374,11 @@ def health():
         cur.fetchone()
         engine = "postgres" if IS_POSTGRES else "sqlite"
         info = {"status": "ok", "engine": engine}
+        # Indicate if the process fell back to SQLite at runtime
+        try:
+            info["fallback_sqlite"] = bool(FALLBACK_SQLITE)
+        except NameError:
+            info["fallback_sqlite"] = False
         if IS_POSTGRES and DATABASE_URL:
             try:
                     parsed = urlparse(DATABASE_URL)
@@ -388,7 +393,11 @@ def health():
         return jsonify(info), 200
     except Exception as e:
         engine = "postgres" if IS_POSTGRES else "sqlite"
-        return jsonify({"status": "error", "engine": engine, "detail": str(e)}), 500
+        try:
+            fallback = bool(FALLBACK_SQLITE)
+        except NameError:
+            fallback = False
+        return jsonify({"status": "error", "engine": engine, "detail": str(e), "fallback_sqlite": fallback}), 500
 
 
 # Lightweight diagnostic endpoint that does NOT touch the database.
