@@ -31,6 +31,11 @@ IS_POSTGRES = bool(DATABASE_URL and _is_postgres(DATABASE_URL))
 # Log at import time so remote logs show app was imported
 logger.info("app module imported; IS_POSTGRES=%s", IS_POSTGRES)
 
+# If we detect Postgres is configured but a runtime connection fails, we
+# can fall back to SQLite to keep the web process healthy. This flag is set
+# by `get_db()` when a fallback happens.
+FALLBACK_SQLITE = False
+
 
 
 
@@ -38,12 +43,19 @@ logger.info("app module imported; IS_POSTGRES=%s", IS_POSTGRES)
 
 def get_db():
     """Return a DB connection to Postgres if DATABASE_URL is set, otherwise SQLite."""
+    global FALLBACK_SQLITE
     if IS_POSTGRES:
         # Lazy import to avoid hard dependency when using SQLite
-        import psycopg2
-        import psycopg2.extras
-        conn = psycopg2.connect(DATABASE_URL)
-        return conn
+        try:
+            import psycopg2
+            import psycopg2.extras
+            conn = psycopg2.connect(DATABASE_URL)
+            return conn
+        except Exception:
+            # Don't crash the web process if Postgres is temporarily unreachable.
+            # Fall back to SQLite and record that we did so.
+            logger.exception("Postgres connect failed; falling back to SQLite for this request")
+            FALLBACK_SQLITE = True
     # Default to SQLite
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -52,9 +64,16 @@ def get_db():
 
 def get_cursor(conn):
     """Return a cursor that yields mapping rows for both engines."""
-    if IS_POSTGRES:
+    # Try to detect a real psycopg2 connection instance; if it's not available
+    # (because we fell back to SQLite), return the sqlite cursor.
+    try:
+        import psycopg2
         import psycopg2.extras
-        return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        if isinstance(conn, psycopg2.extensions.connection):
+            return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    except Exception:
+        # psycopg2 not available or conn is not a psycopg2 connection
+        pass
     return conn.cursor()
 
 
