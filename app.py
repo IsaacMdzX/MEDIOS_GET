@@ -28,6 +28,9 @@ def _is_postgres(url: str) -> bool:
 
 IS_POSTGRES = bool(DATABASE_URL and _is_postgres(DATABASE_URL))
 
+# Log at import time so remote logs show app was imported
+logger.info("app module imported; IS_POSTGRES=%s", IS_POSTGRES)
+
 
 
 
@@ -367,6 +370,25 @@ def health():
     except Exception as e:
         engine = "postgres" if IS_POSTGRES else "sqlite"
         return jsonify({"status": "error", "engine": engine, "detail": str(e)}), 500
+
+
+# Lightweight diagnostic endpoint that does NOT touch the database.
+# Useful to verify the WSGI process is running and env vars are available.
+@app.route("/__status")
+def status():
+    try:
+        info = {
+            "status": "ok",
+            "import_ok": True,
+            "engine_config": "postgres" if IS_POSTGRES else "sqlite",
+            "has_database_url": bool(DATABASE_URL),
+        }
+        # Expose a few useful env vars without leaking secrets
+        info["flask_debug"] = os.getenv("FLASK_DEBUG", "")
+        info["show_debug_errors"] = os.getenv("SHOW_DEBUG_ERRORS", "0")
+        return jsonify(info), 200
+    except Exception:
+        return jsonify({"status": "error"}), 500
 
 if __name__ == "__main__":
     init_db()
