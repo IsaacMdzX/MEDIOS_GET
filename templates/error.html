@@ -17,6 +17,10 @@
       <p>{{ message }}</p>
       <p>Revisa el estado en <a href="/health">/health</a> y los registros de la aplicación en Render.</p>
       <p>Si necesitas, <a href="/">volver al inicio</a> (intenta de nuevo).</p>
+      {% if traceback %}
+      <h3>Detalle (solo visible por depuración)</h3>
+      <pre>{{ traceback }}</pre>
+      {% endif %}
     </div>
   </body>
 </html>

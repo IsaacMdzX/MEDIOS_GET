@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from pathlib import Path
 import time
 import logging
+import traceback
 try:
     from dotenv import load_dotenv
 except ImportError:
@@ -151,9 +152,15 @@ def index():
         return render_template("index.html", ingresos=ingresos, gastos=gastos, saldo=saldo, recientes=recientes)
     except Exception:
         # Log full exception to stdout (captured by Render)
+        tb = traceback.format_exc()
         logger.exception("Error while rendering index; DB may be unavailable")
-        # Provide a friendly error page that points to /health and logs
-        return render_template("error.html", message="No se pudo acceder a la base de datos. Revisa /health y los logs."), 500
+        # If the environment requests debug output, expose the traceback on the error page
+        show_debug = os.getenv("SHOW_DEBUG_ERRORS", "0").lower() in ("1", "true", "yes")
+        return render_template(
+            "error.html",
+            message="No se pudo acceder a la base de datos. Revisa /health y los logs.",
+            traceback=tb if show_debug else None,
+        ), 500
 
 def _build_filters(args):
     conditions = []
@@ -210,8 +217,14 @@ def movimientos():
             'concepto': request.args.get('concepto', ''),
         })
     except Exception:
+        tb = traceback.format_exc()
         logger.exception("Error while listing movimientos; DB may be unavailable")
-        return render_template("error.html", message="No se pudo acceder a la base de datos. Revisa /health y los logs."), 500
+        show_debug = os.getenv("SHOW_DEBUG_ERRORS", "0").lower() in ("1", "true", "yes")
+        return render_template(
+            "error.html",
+            message="No se pudo acceder a la base de datos. Revisa /health y los logs.",
+            traceback=tb if show_debug else None,
+        ), 500
 
 @app.post("/movimientos/<int:mov_id>/eliminar")
 def eliminar_movimiento(mov_id: int):

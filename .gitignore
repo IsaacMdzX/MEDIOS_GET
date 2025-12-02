@@ -1,0 +1,30 @@
+# Python virtualenvs
+venv/
+.venv/
+venv-*/
+
+# Byte-compiled / caching
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Envs and secrets
+.env
+.env.*
+
+# DB files
+data.db
+*.sqlite
+
+# Editor and OS files
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Node
+node_modules/
+
+# Build artifacts
+dist/
+.pytest_cache/
