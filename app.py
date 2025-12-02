@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify
+from flask import Flask, render_template, request, redirect, jsonify, send_file, abort
 import os
 import sqlite3
 from urllib.parse import urlparse
@@ -438,3 +438,21 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     debug_flag = os.getenv("FLASK_DEBUG", "1") in ("1", "true", "True")
     app.run(host=host, port=port, debug=debug_flag)
+
+
+# Temporary endpoint to export the SQLite file from the running instance.
+# Protected by a secret key set in the environment variable `DB_EXPORT_KEY`.
+# Usage: GET /_export_db?key=<secret>
+@app.route("/_export_db")
+def export_db():
+    secret = os.getenv("DB_EXPORT_KEY")
+    if not secret:
+        # Not enabled
+        abort(404)
+    key = request.args.get("key", "")
+    if not key or key != secret:
+        abort(403)
+    # Ensure file exists
+    if not DB_PATH.exists():
+        abort(404)
+    return send_file(str(DB_PATH), as_attachment=True, download_name="data.db")
